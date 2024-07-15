@@ -1,67 +1,24 @@
-# Install Nginx
+# Setup New Ubuntu server with nginx
+
+exec { 'update system':
+        command => '/usr/bin/apt-get update',
+}
+
 package { 'nginx':
-  ensure => installed,
+	ensure => 'installed',
+	require => Exec['update system']
 }
 
-# Set Nginx to listen on port 80
-file_line { 'nginx_listen':
-  path    => '/etc/nginx/sites-available/default',
-  line    => '    listen 80 default_server;',
-  match   => '^    listen\s*80;',
-  replace => true,
+file {'/var/www/html/index.html':
+	content => 'Hello World!'
 }
 
-# Configure error page
-file { '/var/www/html/404.html':
-  content => "Ceci n'est pas une page\n",
+exec {'redirect_me':
+	command => 'sed -i "24i\	rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;" /etc/nginx/sites-available/default',
+	provider => 'shell'
 }
 
-# Configure Nginx to serve the redirect_me file
-file { '/etc/nginx/sites-available/default':
-  content => "
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
-
-    server_name _;
-
-    error_page 404 /404.html;
-    location = /404.html{
-       internal;
-    }
-
-    location /redirect_me {
-        return 301 http://www.redirectedpage.com/;
-    }
+service {'nginx':
+	ensure => running,
+	require => Package['nginx']
 }
-  ",
-  notify  => Service['nginx'],
-}
-
-# Test Nginx configuration for syntax errors
-exec { 'nginx_test_config':
-  command     => '/usr/sbin/nginx',
-  logoutput   => true,
-  refreshonly => true,
-}
-
-# Restart Nginx service if the configuration is valid
-service { 'nginx':
-  ensure     => running,
-  enable     => true,
-  subscribe  => File['/etc/nginx/sites-available/default'],
-  require    => Exec['nginx_test_config'],
-}
-# Create index file with "Hello World!" message
-file { '/var/www/html/index.nginx-debian.html':
-  content => 'Hello World!',
-}
-
-# Create redirect_me file with redirect information
-file { '/var/www/html/redirect_me':
-  content => "HTTP/1.1 301 Moved Permanently\r\nLocation: http://www.redirectedpage.com/\r\n\r\n",
-}
-
