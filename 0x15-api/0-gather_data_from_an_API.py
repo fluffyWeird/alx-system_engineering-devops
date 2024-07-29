@@ -5,9 +5,8 @@
 import requests
 import sys
 
-
 if __name__ == "__main__":
-    # Check if the script is provided with an employee ID as a command-line argument
+    # Check the script is there with an e.ID as a command-line argument
     if len(sys.argv) != 2:
         sys.exit(1)
 
@@ -35,3 +34,4 @@ if __name__ == "__main__":
     else:
         # Display an error message if the request was not successful
         print(f"Error: Unable to fetch data. Status code: {response.status_code}")
+
