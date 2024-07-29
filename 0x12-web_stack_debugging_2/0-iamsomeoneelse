@@ -7,4 +7,4 @@ fi
 # Store the username from the argument
 USERNAME=$1
 # Run the whoami command as the specified user
-su -c "whoami" $USERNAME
+su -c "whoami" "$USERNAME"
